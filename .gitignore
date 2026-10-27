@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+.env
+.claude/settings.local.json
+iesniegumi.db
+# claude-security atskaites (tām ir arī savs .gitignore)
+CLAUDE-SECURITY-*/
+paraugs/CLAUDE-SECURITY-RESULTS.md

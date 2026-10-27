@@ -1,0 +1,14 @@
+{
+  "nosaukums": "PHP2Shell",
+  "cve": ["CVE-2026-109618", "CVE-2026-109619"],
+  "cvss": 9.2,
+  "produkts": "PHP",
+  "labotas": {
+    "8.2": "8.2.35",
+    "8.3": "8.3.36",
+    "8.4": "8.4.27",
+    "8.5": "8.5.12"
+  },
+  "bez_labojuma": "PHP 8.1 un vecākām oficiāla laidiena nav",
+  "avots": "CERT.LV brīdinājums un php.net, 21.10.2026"
+}

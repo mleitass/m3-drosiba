@@ -1,0 +1,26 @@
+# Ezermala · Iesniegumi · Ezerdati testa vide
+# Palaišana: docker compose up -d (Ezerdati serverī)
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://ezermala:Ezerm4la!Iesn-2026@db:5432/iesniegumi
+      OMD_BASE_URL: https://omd.ezerdati.example
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ezermala
+      POSTGRES_PASSWORD: Ezerm4la!Iesn-2026
+      POSTGRES_DB: iesniegumi
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-dati:/var/lib/postgresql/data
+
+volumes:
+  db-dati:

@@ -1,0 +1,6 @@
+# Versijas piesaistītas, lai mācību vide būtu atkārtojama.
+fastapi==0.143.3
+pydantic==2.14.1
+uvicorn==0.54.0
+requests==2.31.0
+httpx==0.28.1

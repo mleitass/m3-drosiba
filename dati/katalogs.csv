@@ -1,0 +1,8 @@
+# Ezermalas novada pašvaldība · IKT resursu kataloga izraksts (izdomāts)
+# atjaunināts: 2025-08-14
+id,resurss,produkts,versija,pieejams_no,uztur
+K1,Iesniegumi (portāls un API),Python,3.12.7,internets,SIA Ezerdati
+K2,Pašvaldības tīmekļvietne (WordPress),PHP,8.1.31,internets,neviens (līgums beidzās 2024)
+K3,Ezerdati attālinātās pārvaldības konsole,PHP,8.3.30,internets,SIA Ezerdati
+K4,Datubāzes pārvaldības rīks (Adminer),PHP,8.2.28,iekštīkls,SIA Ezerdati
+K5,Ugunsmūra pārvaldības portāls,ražotāja programmatūra,,internets,SIA Ezerdati
