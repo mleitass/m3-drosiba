@@ -1,100 +1,73 @@
 # Pasniedzēja paraugs: kā lasīt drošības atskaiti
 
-> **Šo paraugu uzrakstīja pasniedzējs, nevis spraudnis.** Atradumi ir īsti: tie ir jūsu repozitorija kodā. Noformējums ir vienkāršots. Spraudņa atskaite izskatās citādi, bet tajā ir tās pašas trīs lietas: **smagums**, **pārbaude** un **pārklājums**.
+> **Šī ir pasniedzēja īsta `claude-security` skenēšana** ar piepūli `low`, 27.10.2026, uz tādas pašas kopijas kā jūsējā (pēc `make sagatavot`). Zemāk ir tās kopsavilkums latviski un pasniedzēja komentāri. Pilna atskaite angliski ir blakus failā [`CLAUDE-SECURITY-RESULTS.md`](CLAUDE-SECURITY-RESULTS.md).
 >
-> Noslēpumi S2–S5 šeit nav nosaukti. Tos salīdzinām kopā 36. slaidā.
+> Jūsu skenēšana var dot citu rezultātu: arī spraudnis ir MI. `PARBAUDE.md` kolonnā "Spraudnis" atzīmējiet **savu** rezultātu, ne šo.
 
 ## Kamēr skenē (5 min)
 
-1. Izlasiet atradumus zemāk. Katram atrodiet: cik smags, kā pārbaudīts, ko labot.
-2. Atveriet savā Codespace vienu atradumu (piemēram, `app/main.py`, 136. rinda) un pārliecinieties paši. **Neko nelabojiet**: skenēšana vēl darbojas.
-3. Izlasiet sadaļu "Pārklājums". Jautājiet: ko šis rīks neredzēja?
+1. Izlasiet kopsavilkumu zemāk.
+2. Pārliecinieties paši par F4. Terminālī (ne Claude Code logā):
+   ```
+   echo b21kLXByb2QtOWZLMm1RN3hSNHZUMWJOOGNXM3pMNnBI | base64 -d
+   ```
+   Tā ir virkne no `deploy/izvietot.sh`, 10. rindas. Kodēts nenozīmē šifrēts. **Neko nelabojiet**: skenēšana vēl darbojas.
+3. Izlasiet "Smagums", "Pārbaude" un "Pārklājums". Katrā ir viens jautājums.
 4. Izvēlieties vienu atradumu, ko ierakstītu nākamajā specifikācijā. Ierakstiet to `PARBAUDE.md` beigās.
 
-## Kopsavilkums
+## Kopsavilkums: 6 atradumi
 
-| Smagums | Atradumi |
-|---|---|
-| Kritisks | 0 |
-| Augsts | 2 (P-01, P-02) |
-| Vidējs | 3 (P-03, P-04, P-05) |
-| Zems | 2 (P-06, P-07) |
-| Atspēkoti pārbaudē | 2 (A-01, A-02) |
+| # | Smagums | Kas | Vieta | `PARBAUDE.md` |
+|---|---|---|---|---|
+| F1 | **Augsts** | API bez autentifikācijas. Jebkurš nolasa iedzīvotāju personas kodus, vārdus, e-pastus un iesniegumu tekstu. ID ir secīgi, un saraksts tos izsniedz | `app/main.py:136` | Citi atradumi |
+| F2 | Vidējs | MI pakalpojuma API atslēga. Tā ir arī konteinera attēlā | `config.ini:7` | S1 |
+| F3 | Vidējs | MI pakalpojuma ražošanas atslēga. Fails izdzēsts, bet atslēga paliek Git vēsturē | `deploy/prod.env:4`, tikai vēsturē | S3 |
+| F4 | Vidējs | OMD reģistra piekļuves talons, "paslēpts" ar base64. Vēl tas nonāk ssh komandrindā | `deploy/izvietot.sh:10` | S5 |
+| F5 | Vidējs | Datubāzes parole. Ports 5432 ir atvērts uz visām tīkla saskarnēm | `docker-compose.yml:18` un `:9` | S2 |
+| F6 | Vidējs | Testa datubāzes parole koda komentārā | `tests/test_integracija.py:9` | S4 |
 
-## Atradumi
+Katram atradumam atskaitē ir: **ietekme**, **vieta** (ar CWE numuru), **uzbrukuma scenārijs**, **priekšnoteikumi**, **labojums** un **pārbaude**. Tā izskatās laba atskaite: to var nodot piegādātājam bez pārrakstīšanas.
 
-### P-01 · Augsts · MI pakalpojuma API atslēga konfigurācijas failā
+## Smagums
 
-- **Vieta:** `config.ini:7`. To pašu failu `Dockerfile:7` iekopē konteinera attēlā.
-- **Kas:** `api_key = ezllm-live-…[REDACTED]`. Kas redz repozitoriju vai attēlu, var izmantot MI pakalpojumu Ezermalas vārdā un uz tās rēķina.
-- **Pārbaude:** Vai tas nav piemērs? Nē: `app/config.py:17` lasa šo failu izpildes laikā. Atradums paliek.
-- **Labojums:** nomainīt atslēgu. Jauno glabāt noslēpumu glabātuvē vai vides mainīgajā, ne repozitorijā un ne attēlā.
-- **OWASP 2025:** A02, A08
+Pētnieks F1–F5 sākumā atzīmēja kā "Augsts". Pārbaudes paneļa trīs aģenti F2–F5 pazemināja līdz "Vidējs". Iemesls ir priekšnoteikumi: lai izmantotu noslēpumu, uzbrucējam vispirms vajag piekļuvi repozitorijam vai attēlam. F1 vajag tikai tīklu.
 
-### P-02 · Augsts · Jebkurš var nolasīt jebkura iedzīvotāja iesniegumu
+F2 balsis nebija vienādas: viens aģents balsoja "Augsts", divi "Vidējs".
 
-- **Vieta:** `app/main.py:136`, `GET /submissions/{id}`
-- **Kas:** nav autentifikācijas. ID ir secīgi (`IES-2026-000001`, `…000002`), tos var uzminēt. Atbildē ir personas kods, vārds un iesnieguma teksts.
-- **Pārbaude:** Varbūt to aizsargā kas cits? Meklēts: `Depends`, autentifikācija, starpprogrammatūra. Galapunkts to neizmanto. Atradums paliek.
-- **Labojums:** autentifikācija un pārbaude, vai iesniegums pieder pieprasītājam. ID nedrīkst būt vienīgā aizsardzība.
-- **OWASP 2025:** A01
+**Jautājums:** repozitorijs ir pie piegādātāja, kopijas ir pie katra izstrādātāja, un attēls ir reģistrā. Vai pasūtītāja vietā jūs piekristu "Vidējs" noplūdušai ražošanas atslēgai?
 
-### P-03 · Vidējs · Iesniegumu saraksts bez autentifikācijas
+## Pārbaude
 
-- **Vieta:** `app/main.py:120`, `GET /submissions`
-- **Kas:** sarakstā ir visu iesniegumu ID. Tad P-02 ID nav pat jāmin.
-- **Pārbaude:** atbildes modelis `SubmissionListItem` nesatur vārdu, personas kodu un tekstu (`app/models.py:87`). Tāpēc smagums ir zemāks nekā P-02, bet atradums paliek.
-- **OWASP 2025:** A01
+- Viens aģents ("pētnieks") izlasīja visus 35 failus un sameklēja kandidātus.
+- Trīs aģentu panelis katru kandidātu pārbaudīja no trīs pusēm: vai tam var piekļūt (sasniedzamība), cik slikti (ietekme), vai kas jau aizsargā (esošās aizsardzības).
+- Visi seši apstiprināti 3 no 3.
+- **Nekas netika palaists.** Tikai lasīts kods. Neviens uzbrukums nav izmēģināts.
 
-### P-04 · Vidējs · Datubāzes ports atvērts uz āru
+F1 ticamība ir "vidēja", pārējiem "augsta". Atskaite nepaskaidro, kāpēc. Iespējams, tāpēc, ka no koda nevar redzēt, vai serverim priekšā nav vārtejas ar autentifikāciju.
 
-- **Vieta:** `docker-compose.yml:21`, `"5432:5432"`
-- **Kas:** Postgres ir sasniedzams no resursdatora tīkla, ne tikai no API konteinera.
-- **Pārbaude:** fails ir "testa vide", bet komentārs saka, ka to palaiž Ezerdati serverī. Atradums paliek.
-- **OWASP 2025:** A02
-
-### P-05 · Vidējs · Atkarība ar zināmām ievainojamībām
-
-- **Vieta:** `requirements.txt`, `requests==2.31.0`
-- **Kas:** versijai ir 3 publicētas CVE. Visas labotas versijā 2.33.0.
-- **Pārbaude:** šo labāk pārbauda deterministisks rīks (osv-scanner), nevis MI. Skatiet 37. slaidu.
-- **OWASP 2025:** A03
-
-### P-06 · Zems · Kļūdas teksts nonāk līdz lietotājam
-
-- **Vieta:** `app/errors.py:50`
-- **Kas:** neparedzētas kļūdas gadījumā API atgriež `str(exc)`. Tajā var būt iekšējas detaļas: ceļi, SQL, pieslēguma informācija.
-- **Pārbaude:** validācijas kļūdām (`errors.py:38`) ievadītās vērtības neatkārto, tas ir labi. Bet 500 kļūdai atradums paliek.
-- **OWASP 2025:** A10
-
-### P-07 · Zems · MI šķirotājs kļūdas gadījumā klusi sūta uz Kanceleju
-
-- **Vieta:** `app/triage.py:51`
-- **Kas:** ja MI pakalpojums neatbild, iesniegums nonāk Kancelejā, un brīdinājums ir tikai žurnālā. Pabalsta iesniegums var nokavēt termiņu, un neviens to nepamana.
-- **Pārbaude:** tas nav uzbrukums, tā ir izturētspēja. Daži rīki to neziņo vispār.
-- **OWASP 2025:** A10
-
-## Atspēkoti pārbaudē
-
-Šos atradumus rīks sākumā atzīmēja, bet pārbaudē atmeta. Labā atskaitē tie ir redzami, lai jūs zinātu, ka tie pārbaudīti.
-
-| # | Kas | Kāpēc atmests |
-|---|---|---|
-| A-01 | Personas kodi `app/storage.py:55` | Sintētiski testa dati (komentārs 52. rindā). Tos ielādē tikai testu datubāzē atmiņā |
-| A-02 | `model = ezer-llm-2026-06`, `config.ini:6` | Izskatās pēc atslēgas, bet ir modeļa nosaukums |
+**Jautājums:** ja nekas netika palaists, kā jūs pārliecinātos, ka F1 ir īsts?
 
 ## Pārklājums
 
-| Skatīts | Nav skatīts |
-|---|---|
-| `app/`, `tests/`, `deploy/`, `riki/` | Git vēsture |
-| `Dockerfile`, `docker-compose.yml`, `config.ini` | Uzbūvēts konteinera attēls |
-| `requirements.txt` (tikai versijas) | Darbojošs serveris (kods tikai lasīts, nav palaists) |
+- Skatīti visi 35 faili un **arī Git vēsture**: F3 atrasts tikai tur.
+- Piepūle `low`: viens lasītājs, bez draudu modeļa. Atskaite pati saka, ka `medium` vai `high` var atrast vairāk.
 
-**Pārklājums nav garantija.** Ja atskaitē atraduma nav, tas nenozīmē, ka tā nav. Tas nozīmē, ka rīks to neatrada tur, kur meklēja.
+**Svarīgākais šajā atskaitē:** tā apzīmēta kā `unverified`. Atskaites veidotājs atteicās iekļaut F3 mašīnlasāmajos failos (JSONL un SARIF), jo faila `deploy/prod.env` darba kokā vairs nav. Cilvēkam lasāmajā atskaitē F3 ir. **Ja CI konveijers lasītu tikai SARIF, bīstamākais noslēpums pazustu.** Tāpēc vārti ir deterministisks rīks (37. slaids), un cilvēks lasa atskaiti.
+
+### Ko šī skenēšana neziņoja
+
+Kodā ir vēl atradumi. Šī skenēšana tos neminēja:
+
+| Vieta | Kas | OWASP 2025 |
+|---|---|---|
+| `app/errors.py:50` | Neparedzētas kļūdas teksts (`str(exc)`) nonāk līdz lietotājam | A10 |
+| `app/triage.py:51` | MI šķirotājs kļūdas gadījumā klusi sūta iesniegumu uz Kanceleju | A10 |
+| `requirements.txt` | `requests==2.31.0`: 3 publicētas CVE. To labāk atrod osv-scanner | A03 |
+
+**Jautājums:** vai jūsu skenēšana kādu no tiem atrada? Ja jā, tas nozīmē, ka divas skenēšanas dod dažādus rezultātus.
 
 ## Jautājumi savai atskaitei
 
-1. Vai tajā ir rakstīts, ko spraudnis skatīja un ko ne? Vai tas skatīja Git vēsturi?
-2. Vai kāds atradums ir atspēkots? Kāpēc?
-3. Vai jūsu un kaimiņa atskaitēs ir tie paši atradumi ar to pašu smagumu?
+1. Vai jūsu atskaitē arī ir F3 (atslēga Git vēsturē)? Vai arī tā apzīmēta kā `unverified`?
+2. Vai jūsu smagumi sakrīt ar šiem?
+3. Vai jūsu un kaimiņa atskaitēs ir tie paši atradumi?
